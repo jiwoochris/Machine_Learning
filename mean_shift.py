@@ -7,7 +7,7 @@ cap = cv2.VideoCapture('aaa.mp4')
 ret,frame = cap.read()
 
 # setup initial location of window
-c,r,w,h = 170, 250, 110, 170  # simply hardcoded the values
+c,r,w,h = 360, 360, 155, 155  # simply hardcoded the values
 track_window = (c, r, w, h)
 
 # set up the ROI for tracking
@@ -21,12 +21,16 @@ cv2.normalize(roi_hist,roi_hist,0,255,cv2.NORM_MINMAX)
 # Setup the termination criteria, either 10 iteration or move by atleast 1 pt
 term_crit = ( cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 20, 1 )
 
+out = cv2.VideoWriter('output.mp4', cv2.VideoWriter_fourcc(*'XVID'), 30, (720, 720))
+
 while(1):
     ret ,frame = cap.read()
 
     if ret == True:
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         dst = cv2.calcBackProject([hsv],[0],roi_hist,[0,180],1)
+
+        masking(dst,'result_cv')
 
         # apply meanshift to get the new location
         ret, track_window = cv2.meanShift(dst, track_window, term_crit)
@@ -35,10 +39,14 @@ while(1):
         x,y,w,h = track_window
         img2 = cv2.rectangle(frame, (x,y), (x+w,y+h), 255, 2)
         cv2.imshow('img2',img2)
+
+        out.write(frame)
+
         k = cv2.waitKey(60) & 0xff
 
     else:
         break
-    
+
+out.release()
 cv2.destroyAllWindows()
 cap.release()
